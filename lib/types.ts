@@ -241,3 +241,112 @@ export interface EmergencyAlert {
   timestamp: string;
   affectedAreas: string[];
 }
+
+export interface MayorNotification {
+  id: string;
+  type: 'hitl_pending' | 'new_submission' | 'security_alert' | 'critical_deadline' | 'fault_report';
+  title: string;
+  message: string;
+  timestamp: string;
+  recipientEmail: string; // 'obec@cehovice.cz'
+  read: boolean;
+  referenceId?: string;
+  actionUrl?: string;
+}
+
+export interface EventReminder {
+  id: string;
+  eventId: string;
+  eventTitle: string;
+  eventDate: string;
+  userEmail: string;
+  scheduledNotificationDate: string; // 1 day before event
+  status: 'naplanovano' | 'odeslano';
+  createdAt: string;
+}
+
+export interface SecurityTelemetryHourPoint {
+  hour: string;
+  timeLabel: string;
+  zeroTrustScore: number;
+  blockedThreats: number;
+  threatCategory: string;
+  mitigationDetail: string;
+  status: 'safe' | 'warning' | 'mitigated';
+}
+
+export interface HealthCheckItemResult {
+  id: string;
+  name: string;
+  category: 'isds' | 'ssl' | 'database_snapshot';
+  status: 'operational' | 'warning' | 'error';
+  latencyMs: number;
+  testedTarget: string;
+  details: string;
+  lastChecked: string;
+  validUntilOrHash?: string;
+  openSourceStandard: string;
+}
+
+export interface SecurityHealthCheckReport {
+  timestamp: string;
+  testedBy: string;
+  overallStatus: 'all_passed' | 'warning' | 'failed';
+  totalServices: number;
+  passedServices: number;
+  averageLatencyMs: number;
+  items: HealthCheckItemResult[];
+}
+
+export interface SecurityCaiTelemetry {
+  overallStatus: 'SECURE' | 'SCANNING' | 'ATTENTION' | 'CRITICAL';
+  titanGodmodeArmed: boolean;
+  zeroTrustScore: number;
+  nis2ComplianceScore: number;
+  activeFirewallRules: number;
+  blockedThreatsCount: number;
+  lastDeepScanDate: string;
+  lastSnapshotHash: string;
+  securityAgentMessage: string;
+  gatewayLatencyMs: number;
+  timeline24h?: SecurityTelemetryHourPoint[];
+  lastHealthCheckReport?: SecurityHealthCheckReport;
+  recentFindings: {
+    id: string;
+    level: 'info' | 'warning' | 'clean';
+    service: string;
+    message: string;
+    timestamp: string;
+  }[];
+}
+
+export interface MunicipalBudget {
+  fiscalYear: number;
+  totalRevenuesKcz: number;
+  totalExpensesKcz: number;
+  surplusKcz: number;
+  reserveFundKcz: number;
+  investments: {
+    name: string;
+    allocatedKcz: number;
+    spentKcz: number;
+    status: 'planovano' | 'realizace' | 'dokonceno';
+  }[];
+  taxRevenuesKcz: number;
+  feesCollectedKcz: number;
+}
+
+export interface DeadlineMonitoringItem {
+  id: string;
+  trackingCode: string;
+  subject: string;
+  applicantName: string;
+  createdAt: string;
+  deadlineDate: string;
+  daysRemaining: number;
+  urgency: 'critical' | 'warning' | 'normal' | 'resolved';
+  deliveryMethod: string;
+  assignedOfficer: string;
+  status: SubmissionStatus;
+}
+

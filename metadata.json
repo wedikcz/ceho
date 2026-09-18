@@ -1,6 +1,6 @@
 {
   "name": "Obec Čehovice Online 2027",
   "description": "Oficiální digitální portál obce Čehovice u Prostějova s AI asistentkou Aničkou, bezpečnostním jádrem Titan, úřední deskou a digitální podatelnou.",
-  "requestFramePermissions": ["geolocation"],
+  "requestFramePermissions": ["geolocation", "microphone"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

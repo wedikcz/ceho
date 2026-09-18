@@ -28,8 +28,19 @@ import {
   Filter,
   Check,
   ChevronDown,
+  Printer,
+  Sparkle,
+  Clock,
+  Inbox,
+  Cpu,
 } from 'lucide-react';
 import ExpandableSection from '@/components/ExpandableSection';
+import FaultReportsPrintModal from '@/components/admin/FaultReportsPrintModal';
+import CdpStarostaCard from '@/components/admin/CdpStarostaCard';
+import MayorNotificationBanner from '@/components/admin/MayorNotificationBanner';
+import DeadlineMonitoringSection from '@/components/admin/DeadlineMonitoringSection';
+import SecurityCaiMonitoringSection from '@/components/admin/SecurityCaiMonitoringSection';
+import DigitalPodatelnaMonitoringSection from '@/components/admin/DigitalPodatelnaMonitoringSection';
 import { VILLAGE_DATA } from '@/lib/village-data';
 import {
   FaultReport,
@@ -38,6 +49,10 @@ import {
   OfficialNotice,
   EmergencyAlert,
   Nis2Policy,
+  MayorNotification,
+  DeadlineMonitoringItem,
+  SecurityCaiTelemetry,
+  MunicipalBudget,
 } from '@/lib/types';
 import {
   getStoredReports,
@@ -56,6 +71,10 @@ import {
   updatePolicyStatus,
   getAuditLogs,
   addAuditLog,
+  getStoredMayorNotifications,
+  getDeadlineMonitoringList,
+  getStoredSecurityTelemetry,
+  getMunicipalBudgetData,
 } from '@/lib/store';
 
 export default function AdminPage() {
@@ -71,6 +90,13 @@ export default function AdminPage() {
   const [alerts, setAlerts] = useState<EmergencyAlert[]>([]);
   const [policies, setPolicies] = useState<Nis2Policy[]>([]);
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
+  const [mayorNotifications, setMayorNotifications] = useState<MayorNotification[]>([]);
+  const [deadlines, setDeadlines] = useState<DeadlineMonitoringItem[]>([]);
+  const [securityTelemetry, setSecurityTelemetry] = useState<SecurityCaiTelemetry>(getStoredSecurityTelemetry());
+  const [budget, setBudget] = useState<MunicipalBudget>(getMunicipalBudgetData());
+
+  // Modal states
+  const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
 
   // Form states for adding items in admin
   const [newNoticeTitle, setNewNoticeTitle] = useState('');
@@ -102,6 +128,10 @@ export default function AdminPage() {
     setAlerts(getStoredAlerts());
     setPolicies(getStoredPolicies());
     setAuditLogs(getAuditLogs());
+    setMayorNotifications(getStoredMayorNotifications());
+    setDeadlines(getDeadlineMonitoringList());
+    setSecurityTelemetry(getStoredSecurityTelemetry());
+    setBudget(getMunicipalBudgetData());
   };
 
   useEffect(() => {
@@ -348,7 +378,16 @@ export default function AdminPage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2.5 flex-wrap">
+          <button
+            onClick={() => setIsPrintModalOpen(true)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 border border-amber-500/40 text-xs font-semibold transition-colors"
+            title="Tiskový úřední protokol hlášení závad do PDF (A4)"
+          >
+            <Printer className="w-3.5 h-3.5 text-amber-400" />
+            <span>PDF protokol závad</span>
+          </button>
+
           <button
             onClick={handleExportSystemBundle}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-sky-500/20 hover:bg-sky-500/30 text-sky-200 border border-sky-400/40 text-xs font-semibold transition-colors"
@@ -367,7 +406,16 @@ export default function AdminPage() {
         </div>
       </div>
 
-      {/* Accordion Modules 1-16 */}
+      {/* Automated Mayor Notifications Banner (obec@cehovice.cz) */}
+      <MayorNotificationBanner
+        notifications={mayorNotifications}
+        onRefresh={loadAllAdminData}
+      />
+
+      {/* Prominent Executive Card: ČDP-starosta (Exekutivní AI pro starostu) */}
+      <CdpStarostaCard onDataChanged={loadAllAdminData} />
+
+      {/* Accordion Modules 1-10 */}
       <div className="space-y-4">
         {/* Module 1: HITL Schvalovací fronta (Human-In-The-Loop) */}
         <ExpandableSection
@@ -444,6 +492,26 @@ export default function AdminPage() {
           badge={{ text: `${reports.length} hlášení`, variant: 'azure' }}
         >
           <div className="space-y-4 pt-2 text-xs">
+            {/* Fault Reports PDF Export action bar */}
+            <div className="p-3.5 rounded-xl bg-slate-900 border border-sky-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <span className="font-bold text-white block">
+                  Úřední spisový a skartační protokol hlášení závad (A4 / PDF)
+                </span>
+                <p className="text-slate-400 text-[11px] mt-0.5">
+                  Vygenerujte a vytiskněte oficiální tiskovou sestavu pro archiv obce v souladu se zákonem o obcích a GDPR.
+                </p>
+              </div>
+
+              <button
+                onClick={() => setIsPrintModalOpen(true)}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs transition-all shadow-md shadow-amber-500/20 shrink-0 self-start sm:self-auto"
+              >
+                <Printer className="w-4 h-4" />
+                <span>Exportovat protokol jako PDF (A4)</span>
+              </button>
+            </div>
+
             <div className="divide-y divide-slate-800">
               {reports.map((rep) => (
                 <div key={rep.id} className="py-4 space-y-2.5">
@@ -790,7 +858,63 @@ export default function AdminPage() {
             ))}
           </div>
         </ExpandableSection>
+
+        {/* Module 8: Monitoring lhůt (30denní lhůty dle správního řádu) */}
+        <ExpandableSection
+          id="admin-deadlines"
+          icon={Clock}
+          title="8. Monitoring zákonných lhůt podání (30 dnů dle § 71 správního řádu)"
+          subtitle="Automatické hlídání lhůt pro vyřízení žádostí občanů, prevence nečinnosti a sankcí"
+          badge={{
+            text: `${deadlines.filter((d) => d.urgency === 'critical').length > 0 ? 'Pozor na lhůty' : 'Vše v termínu'}`,
+            variant: deadlines.filter((d) => d.urgency === 'critical').length > 0 ? 'live' : 'azure',
+          }}
+        >
+          <DeadlineMonitoringSection items={deadlines} />
+        </ExpandableSection>
+
+        {/* Module 9: Monitoring digitální podatelny */}
+        <ExpandableSection
+          id="admin-podatelna"
+          icon={Inbox}
+          title="9. Monitoring digitální podatelny (ISDS, webový portál, e-podatelna)"
+          subtitle="Přehled příchozích elektronických podání, datových zpráv a spisové služby"
+          badge={{ text: `${submissions.length} podání`, variant: 'amber' }}
+        >
+          <DigitalPodatelnaMonitoringSection
+            submissions={submissions}
+            onUpdateStatus={(id, newStatus) => {
+              const sub = submissions.find((s) => s.id === id);
+              if (sub) {
+                const updated = saveSubmission({ ...sub, status: newStatus });
+                if (updated) setSubmissions(updated);
+                loadAllAdminData();
+              }
+            }}
+          />
+        </ExpandableSection>
+
+        {/* Module 10: Chytrý monitoring zabezpečení (Security-CAI & Titan Core) */}
+        <ExpandableSection
+          id="admin-security-cai"
+          icon={Cpu}
+          title="10. Chytrý monitoring zabezpečení webu (Security-CAI agent & Titan Core)"
+          subtitle="Telemetrie v reálném čase, Zero-Trust obrana, WAF a stav self-healing snapshotů"
+          badge={{ text: `Skóre ${securityTelemetry.zeroTrustScore}/100`, variant: 'live' }}
+        >
+          <SecurityCaiMonitoringSection
+            telemetry={securityTelemetry}
+            onRefresh={loadAllAdminData}
+          />
+        </ExpandableSection>
       </div>
+
+      {/* Official Fault Reports Printable PDF Modal */}
+      <FaultReportsPrintModal
+        isOpen={isPrintModalOpen}
+        onClose={() => setIsPrintModalOpen(false)}
+        reports={reports}
+      />
     </div>
   );
 }
