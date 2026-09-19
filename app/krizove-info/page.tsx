@@ -5,13 +5,9 @@ import Link from 'next/link';
 import {
   AlertTriangle,
   PhoneCall,
-  Flame,
-  Shield,
-  Zap,
   Droplets,
   Radio,
   ArrowLeft,
-  LifeBuoy,
 } from 'lucide-react';
 import { VILLAGE_DATA } from '@/lib/village-data';
 

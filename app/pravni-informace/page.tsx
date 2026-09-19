@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { ShieldCheck, Scale, FileText, ArrowLeft, Lock, Award } from 'lucide-react';
+import { Scale, FileText, ArrowLeft, Lock } from 'lucide-react';
 import { getStoredPolicies } from '@/lib/store';
 
 export default function PravniInformacePage() {

@@ -7,18 +7,10 @@ import {
   Menu,
   X,
   Search,
-  Shield,
-  FileText,
-  AlertTriangle,
-  Send,
-  Calendar,
-  Users,
-  Building2,
-  Phone,
-  Sparkles,
   Lock,
 } from 'lucide-react';
 import CommandBar from './CommandBar';
+import A11yToggle from './A11yToggle';
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -115,6 +107,9 @@ export default function Navbar() {
                   Ctrl+K
                 </kbd>
               </button>
+
+              {/* Accessibility toggler */}
+              <A11yToggle />
 
               {/* Admin Panel button */}
               <Link

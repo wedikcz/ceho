@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Calendar, MapPin, Clock, ArrowLeft, Download, Filter, Search, Bell, CheckCircle2, X, Mail } from 'lucide-react';
+import { Calendar, MapPin, ArrowLeft, Download, Search, Bell, CheckCircle2, X, Mail } from 'lucide-react';
 import { VILLAGE_DATA } from '@/lib/village-data';
 import { saveEventReminder } from '@/lib/store';
 

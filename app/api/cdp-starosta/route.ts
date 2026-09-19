@@ -1,24 +1,6 @@
 import { GoogleGenAI } from '@google/genai';
 import { NextRequest, NextResponse } from 'next/server';
-
-const MUNICIPAL_EXECUTIVE_CONTEXT = `Jsi "ČDP-starosta" – exekutivní a všemocný vlastní AI asistent starosty obce Čehovice Milana Smékala.
-Máš absolutní přístup k celému digitálnímu úřadu, rozpočtu obce, spisové službě, úřední desce, krizovému varování a bezpečnostnímu jádru Titan Core (NIS2, Cyber-Municipal Shield 2027).
-
-Údaje o obci Čehovice:
-- Starosta: Milan Smékal (telefon úřad: +420 582 373 723, mobil: +420 724 182 455, e-mail: obec@cehovice.cz)
-- IČO: 00288101, Datová schránka: 3vgb2y3, Počet obyvatel: 520
-- Rozpočet 2026: Příjmy 14 850 000 Kč, Výdaje 13 420 000 Kč, Přebytek +1 430 000 Kč, Rezervní fond 4 250 000 Kč
-- Klíčové investice 2026:
-  1. Rekonstrukce chodníků podél silnice III/36711 a nové LED osvětlení (alokováno 2,8 mil. Kč)
-  2. Revitalizace rybníka Pod Hrází (1,2 mil. Kč - dokončeno)
-  3. Fotovoltaika + baterie na budově OÚ a hasičské zbrojnici (950 tis. Kč)
-- Bezpečnostní jádro Titan: NÚKIB registrace CZ-NIS2-VS-79817-00288101, Zero-Trust 98/100, Self-Healing Snapshots aktivní, PII filtrace aktivní.
-- Zákonné lhůty: 30 dnů dle správního řádu (č. 500/2004 Sb.) a zákona č. 106/1999 Sb.
-
-Tvým úkolem je pomáhat starostovi spravovat obec bez jakýchkoliv technických či programovacích znalostí (AIOps/ITOps):
-1. Okamžitě reagovat na jeho pokyny s úctou, věcností a profesionalitou.
-2. Pokud starosta žádá akci (např. schválit záměr, zkontrolovat rozpočet, spustit bezpečnostní scan, vyhlásit varování, zkontrolovat lhůty podání), potvrď provedení a zformuluj přesný postup.
-3. Formátuj odpověď přehledně v češtině, s odrážkami a zvýrazněním klíčových čísel a termínů.`;
+import { getUnifiedAgentSystemPrompt } from '@/lib/agent-context';
 
 export async function POST(req: NextRequest) {
   try {
@@ -51,52 +33,57 @@ export async function POST(req: NextRequest) {
     const apiKey = process.env.GEMINI_API_KEY;
 
     if (apiKey) {
-      try {
-        const ai = new GoogleGenAI({
-          apiKey,
-          httpOptions: {
-            headers: {
-              'User-Agent': 'aistudio-build',
-            },
+      const ai = new GoogleGenAI({
+        apiKey,
+        httpOptions: {
+          headers: {
+            'User-Agent': 'aistudio-build',
           },
-        });
+        },
+      });
 
-        const contents: any[] = [];
-        if (Array.isArray(history)) {
-          for (const h of history.slice(-6)) {
-            contents.push({
-              role: h.role === 'assistant' ? 'model' : 'user',
-              parts: [{ text: h.content }],
+      const contents: any[] = [];
+      if (Array.isArray(history)) {
+        for (const h of history.slice(-6)) {
+          contents.push({
+            role: h.role === 'assistant' ? 'model' : 'user',
+            parts: [{ text: h.content }],
+          });
+        }
+      }
+      contents.push({
+        role: 'user',
+        parts: [
+          {
+            text: `Příkaz starosty Milana Smékala: "${message}". Odpověz jako jeho všemocný exekutivní ČDP asistent pro řízení obce. Pokud jde o schválení, kontrolu rozpočtu nebo bezpečnostní zásah, zřetelně potvrď provedení.`,
+          },
+        ],
+      });
+
+      const candidateModels = ['gemini-3.8-flash', 'gemini-3.1-flash-lite'];
+      for (const model of candidateModels) {
+        try {
+          const response = await ai.models.generateContent({
+            model,
+            contents,
+            config: {
+              systemInstruction: { parts: [{ text: getUnifiedAgentSystemPrompt('cdp_starosta') }] },
+              temperature: 0.3,
+            },
+          });
+
+          const reply = response.text;
+          if (reply) {
+            return NextResponse.json({
+              reply,
+              detectedAction,
+              actionPayload,
+              source: `${model}-executive`,
             });
           }
+        } catch (err: any) {
+          console.warn(`Gemini API in cdp-starosta with ${model} failed, trying fallback:`, err?.message || err);
         }
-        contents.push({
-          role: 'user',
-          parts: [
-            {
-              text: `Příkaz starosty Milana Smékala: "${message}". Odpověz jako jeho všemocný exekutivní ČDP asistent pro řízení obce. Pokud jde o schválení, kontrolu rozpočtu nebo bezpečnostní zásah, zřetelně potvrď provedení.`,
-            },
-          ],
-        });
-
-        const response = await ai.models.generateContent({
-          model: 'gemini-3.8-flash',
-          contents,
-          config: {
-            systemInstruction: { parts: [{ text: MUNICIPAL_EXECUTIVE_CONTEXT }] },
-            temperature: 0.3,
-          },
-        });
-
-        const reply = response.text || 'Rozkaz, pane starosto. Požadavek byl zaevidován a zpracován v jádru Titan.';
-        return NextResponse.json({
-          reply,
-          detectedAction,
-          actionPayload,
-          source: 'gemini-3.8-flash-executive',
-        });
-      } catch (err: any) {
-        console.warn('Gemini API call in cdp-starosta failed, using deterministic executive engine:', err);
       }
     }
 

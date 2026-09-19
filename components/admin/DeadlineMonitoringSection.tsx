@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Clock, AlertTriangle, CheckCircle2, FileText, UserCheck, Calendar, ArrowRight } from 'lucide-react';
+import { Clock, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { DeadlineMonitoringItem } from '@/lib/types';
 
 interface DeadlineMonitoringSectionProps {

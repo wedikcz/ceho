@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Send, FileText, CheckCircle2, Clock, Inbox, Mail, ShieldCheck, Check } from 'lucide-react';
+import { ShieldCheck } from 'lucide-react';
 import { DigitalSubmission } from '@/lib/types';
 
 interface DigitalPodatelnaMonitoringSectionProps {

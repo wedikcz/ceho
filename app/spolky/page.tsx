@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Users, Flame, Fish, Sprout, ArrowLeft, Mail, Award, CheckCircle2 } from 'lucide-react';
+import { Users, Flame, Fish, Sprout, ArrowLeft, Mail } from 'lucide-react';
 import { VILLAGE_DATA } from '@/lib/village-data';
 
 export default function SpolkyPage() {

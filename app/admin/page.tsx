@@ -2,46 +2,77 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import {
   Shield,
   Lock,
-  Users,
-  Building2,
-  Trash2,
   FileText,
   AlertTriangle,
   Send,
-  Calendar,
   CheckCircle2,
   XCircle,
-  Eye,
   EyeOff,
   BellRing,
   Download,
   Terminal,
   Activity,
-  ArrowLeft,
-  Sparkles,
-  Key,
   RefreshCw,
-  Search,
-  Filter,
   Check,
-  ChevronDown,
   Printer,
-  Sparkle,
   Clock,
   Inbox,
   Cpu,
+  Bot,
 } from 'lucide-react';
 import ExpandableSection from '@/components/ExpandableSection';
-import FaultReportsPrintModal from '@/components/admin/FaultReportsPrintModal';
-import CdpStarostaCard from '@/components/admin/CdpStarostaCard';
 import MayorNotificationBanner from '@/components/admin/MayorNotificationBanner';
-import DeadlineMonitoringSection from '@/components/admin/DeadlineMonitoringSection';
-import SecurityCaiMonitoringSection from '@/components/admin/SecurityCaiMonitoringSection';
-import DigitalPodatelnaMonitoringSection from '@/components/admin/DigitalPodatelnaMonitoringSection';
 import { VILLAGE_DATA } from '@/lib/village-data';
+
+// Dynamic imports for heavy admin sections to accelerate initial page load and split bundles
+const FaultReportsPrintModal = dynamic(() => import('@/components/admin/FaultReportsPrintModal'), {
+  ssr: false,
+});
+const CdpStarostaCard = dynamic(() => import('@/components/admin/CdpStarostaCard'), {
+  ssr: false,
+});
+const AgentHealthCard = dynamic(() => import('@/components/admin/AgentHealthCard'), {
+  ssr: false,
+  loading: () => (
+    <div className="h-48 rounded-2xl bg-slate-900/40 border border-slate-800 animate-pulse flex items-center justify-center text-xs text-slate-500 font-mono">
+      Načítám Agent Health Dashboard & Telemetrii...
+    </div>
+  ),
+});
+const SecurityCaiMonitoringSection = dynamic(() => import('@/components/admin/SecurityCaiMonitoringSection'), {
+  ssr: false,
+  loading: () => (
+    <div className="h-64 rounded-xl bg-slate-900/40 border border-slate-800 animate-pulse flex items-center justify-center text-xs text-slate-500 font-mono">
+      Načítám bezpečnostní telemetrii a D3 graf...
+    </div>
+  ),
+});
+const AgentKitSection = dynamic(() => import('@/components/admin/AgentKitSection').then((m) => m.AgentKitSection), {
+  ssr: false,
+  loading: () => (
+    <div className="h-64 rounded-xl bg-slate-900/40 border border-slate-800 animate-pulse flex items-center justify-center text-xs text-slate-500 font-mono">
+      Načítám Agent & AI Integration Kit...
+    </div>
+  ),
+});
+const DigitalPodatelnaMonitoringSection = dynamic(() => import('@/components/admin/DigitalPodatelnaMonitoringSection'), {
+  ssr: false,
+});
+const DeadlineMonitoringSection = dynamic(() => import('@/components/admin/DeadlineMonitoringSection'), {
+  ssr: false,
+});
+const SecurityComplianceChart = dynamic(() => import('@/components/admin/SecurityComplianceChart'), {
+  ssr: false,
+  loading: () => (
+    <div className="h-48 rounded-xl bg-slate-900/40 border border-slate-800 animate-pulse flex items-center justify-center text-xs text-slate-500 font-mono">
+      Načítám graf NIS2 compliance...
+    </div>
+  ),
+});
 import {
   FaultReport,
   DigitalSubmission,
@@ -97,6 +128,7 @@ export default function AdminPage() {
 
   // Modal states
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
+  const [privacyMasking, setPrivacyMasking] = useState(false);
 
   // Form states for adding items in admin
   const [newNoticeTitle, setNewNoticeTitle] = useState('');
@@ -174,6 +206,12 @@ export default function AdminPage() {
   const handleAnonymizeReport = (reportId: string) => {
     const updated = anonymizeReportContact(reportId);
     if (updated) setReports(updated);
+    setAuditLogs(getAuditLogs());
+  };
+
+  const handleUpdatePolicyStatus = (policyId: string, status: any) => {
+    const updated = updatePolicyStatus(policyId, status);
+    if (updated) setPolicies(updated);
     setAuditLogs(getAuditLogs());
   };
 
@@ -397,6 +435,15 @@ export default function AdminPage() {
             <span>Export databáze</span>
           </button>
 
+          <Link
+            href="/admin/gdpr"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-200 border border-emerald-500/40 text-xs font-semibold transition-colors"
+            title="Přejít na registr činností zpracování ROPA a audit přístupů GDPR"
+          >
+            <Shield className="w-3.5 h-3.5 text-emerald-400" />
+            <span>GDPR & ROPA Portál</span>
+          </Link>
+
           <button
             onClick={handleLogout}
             className="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700 text-xs font-semibold transition-colors"
@@ -414,6 +461,9 @@ export default function AdminPage() {
 
       {/* Prominent Executive Card: ČDP-starosta (Exekutivní AI pro starostu) */}
       <CdpStarostaCard onDataChanged={loadAllAdminData} />
+
+      {/* Prominent Agent Health & LLM Latency Monitor Card */}
+      <AgentHealthCard onRefreshParent={loadAllAdminData} />
 
       {/* Accordion Modules 1-10 */}
       <div className="space-y-4">
@@ -503,13 +553,30 @@ export default function AdminPage() {
                 </p>
               </div>
 
-              <button
-                onClick={() => setIsPrintModalOpen(true)}
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs transition-all shadow-md shadow-amber-500/20 shrink-0 self-start sm:self-auto"
-              >
-                <Printer className="w-4 h-4" />
-                <span>Exportovat protokol jako PDF (A4)</span>
-              </button>
+              <div className="flex flex-wrap items-center gap-2">
+                {/* Privacy Masking Toggle */}
+                <button
+                  type="button"
+                  onClick={() => setPrivacyMasking(!privacyMasking)}
+                  className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-semibold transition-all ${
+                    privacyMasking
+                      ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50 shadow-sm shadow-emerald-500/5'
+                      : 'bg-slate-950 text-slate-300 border-slate-800 hover:border-slate-700'
+                  }`}
+                  title="Maskovat citlivé kontaktní údaje (e-mail, telefon) rozmazáním"
+                >
+                  <EyeOff className="w-3.5 h-3.5" />
+                  <span>Maskování PII: {privacyMasking ? 'Zapnuto' : 'Vypnuto'}</span>
+                </button>
+
+                <button
+                  onClick={() => setIsPrintModalOpen(true)}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs transition-all shadow-md shadow-amber-500/20 shrink-0 self-start sm:self-auto"
+                >
+                  <Printer className="w-4 h-4" />
+                  <span>Exportovat protokol jako PDF (A4)</span>
+                </button>
+              </div>
             </div>
 
             <div className="divide-y divide-slate-800">
@@ -552,8 +619,14 @@ export default function AdminPage() {
                           ✓ Osobní údaje (e-mail/telefon) byly anonymizovány dle čl. 17 GDPR
                         </span>
                       ) : rep.contactEmail || rep.contactPhone ? (
-                        <span>
-                          Kontakt oznamovatele: <strong className="text-white">{rep.contactEmail || rep.contactPhone}</strong>
+                        <span className="flex items-center gap-2 flex-wrap">
+                          <span>Kontakt oznamovatele:</span>
+                          <strong className={`text-white transition-all duration-300 ${privacyMasking ? 'blur-[5px] select-none pointer-events-none' : ''}`}>
+                            {rep.contactEmail || rep.contactPhone}
+                          </strong>
+                          {privacyMasking && (
+                            <span className="text-[9px] text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider border border-amber-500/20 font-mono">GDPR MASK</span>
+                          )}
                         </span>
                       ) : (
                         <span>Oznamovatel nezadal kontakt (anonymní hlášení).</span>
@@ -720,7 +793,7 @@ export default function AdminPage() {
           icon={Shield}
           title="5. NIS2 Kybernetická bezpečnost & Registrace entity"
           subtitle="Politiky dle čl. 21 odst. 2 písm. a-j směrnice NIS2 a Self-Healing engine"
-          badge={{ text: '10 politik v souladu', variant: 'live' }}
+          badge={{ text: `${policies.filter((p) => p.status === 'aktivni').length} politik v souladu`, variant: 'live' }}
         >
           <div className="space-y-4 pt-2 text-xs">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl bg-slate-900 border border-emerald-500/30">
@@ -751,15 +824,39 @@ export default function AdminPage() {
               </button>
             </div>
 
+            {/* Recharts NIS2 Compliance Status Chart */}
+            <SecurityComplianceChart policies={policies} />
+
+            <div className="pt-2">
+              <h4 className="text-xs font-bold text-white uppercase tracking-wider font-mono mb-2">
+                Zákonný přehled politik (Čl. 21 odst. 2)
+              </h4>
+            </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               {policies.map((p) => (
-                <div key={p.id} className="p-3 rounded-lg bg-slate-950 border border-slate-800 space-y-1">
+                <div key={p.id} className="p-3 rounded-lg bg-slate-950 border border-slate-800 space-y-2">
                   <div className="flex justify-between items-center">
-                    <span className="font-mono text-amber-400 font-bold">{p.article}</span>
-                    <span className="text-[10px] text-emerald-400 font-mono">AKTIVNÍ</span>
+                    <span className="font-mono text-amber-400 font-bold">{p.code}</span>
+                    <select
+                      value={p.status}
+                      onChange={(e) => handleUpdatePolicyStatus(p.id, e.target.value as any)}
+                      className="bg-slate-900 border border-slate-800 text-[10px] rounded px-1.5 py-0.5 font-bold font-mono text-slate-300 focus:outline-none focus:border-amber-500 cursor-pointer"
+                    >
+                      <option value="aktivni" className="text-emerald-400 bg-slate-950">AKTIVNÍ</option>
+                      <option value="ve_schvalovani" className="text-amber-400 bg-slate-950">SCHVALOVÁNÍ</option>
+                      <option value="revize" className="text-rose-400 bg-slate-950">REVIZE</option>
+                    </select>
                   </div>
-                  <h5 className="font-bold text-white">{p.name}</h5>
-                  <p className="text-slate-400 text-[11px]">{p.description}</p>
+                  <div>
+                    <span className="text-[10px] text-slate-500 block font-mono">{p.article}</span>
+                    <h5 className="font-bold text-white mt-0.5">{p.name}</h5>
+                  </div>
+                  <p className="text-slate-400 text-[11px] leading-relaxed">{p.description}</p>
+                  <div className="text-[10px] text-slate-500 font-mono flex justify-between items-center pt-1.5 border-t border-slate-900">
+                    <span>Odpovědný: {p.officerResponsible}</span>
+                    <span>Audit: {p.lastAuditDate}</span>
+                  </div>
                 </div>
               ))}
             </div>
@@ -906,6 +1003,17 @@ export default function AdminPage() {
             telemetry={securityTelemetry}
             onRefresh={loadAllAdminData}
           />
+        </ExpandableSection>
+
+        {/* Module 11: Agent & AI Integration Kit (MCP Server, SOAR Webhook & PTC Engine) */}
+        <ExpandableSection
+          id="admin-agent-kit"
+          icon={Bot}
+          title="11. Agent & AI Integration Kit (MCP Server, SOAR Webhook & PTC Engine)"
+          subtitle="Propojení LLM agentů (Claude, Cursor, Copilot), bezpečnostních SOAR systémů a deterministického PTC"
+          badge={{ text: 'v1.0 Ready', variant: 'live' }}
+        >
+          <AgentKitSection />
         </ExpandableSection>
       </div>
 

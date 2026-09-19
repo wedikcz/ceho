@@ -11,8 +11,6 @@ import {
   Filter,
   ArrowLeft,
   CheckCircle2,
-  Calendar,
-  ExternalLink,
 } from 'lucide-react';
 import TownClock from '@/components/TownClock';
 import { VILLAGE_DATA } from '@/lib/village-data';

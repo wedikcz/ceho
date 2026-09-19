@@ -3,13 +3,9 @@
 import React, { useState } from 'react';
 import {
   Shield,
-  ShieldAlert,
-  Terminal,
   RefreshCw,
   CheckCircle2,
-  Lock,
   Activity,
-  Cpu,
   Server,
   Zap,
 } from 'lucide-react';

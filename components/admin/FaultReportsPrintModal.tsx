@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Printer, X, ShieldCheck, Download, CheckCircle2 } from 'lucide-react';
+import { Printer, X, ShieldCheck } from 'lucide-react';
 import { FaultReport } from '@/lib/types';
 
 interface FaultReportsPrintModalProps {

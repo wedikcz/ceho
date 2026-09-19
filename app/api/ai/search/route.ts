@@ -26,13 +26,23 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-3.5-flash',
-      contents: `Jsi rešeršní asistent starosty obce Čehovice. Použij Google Search a odpověz věcně na dotaz: ${query}. Uveď aktuální fakta a související předpisy pro ČR.`,
-      config: {
-        tools: [{ googleSearch: {} }],
-      },
-    });
+    const candidateSearchModels = ['gemini-3.8-flash'];
+    let response: any = null;
+
+    for (const modelName of candidateSearchModels) {
+      try {
+        response = await ai.models.generateContent({
+          model: modelName,
+          contents: `Jsi rešeršní asistent starosty obce Čehovice. Použij Google Search a odpověz věcně na dotaz: ${query}. Uveď aktuální fakta a související předpisy pro ČR.`,
+          config: {
+            tools: [{ googleSearch: {} }],
+          },
+        });
+        if (response?.text) break;
+      } catch (err: any) {
+        console.warn(`Search grounding with ${modelName} failed:`, err?.message || err);
+      }
+    }
 
     const answer = response.text || 'Nebyly nalezeny žádné podrobnosti.';
     const searchChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];

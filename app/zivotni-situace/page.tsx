@@ -9,12 +9,10 @@ import {
   FileCheck,
   TreePine,
   Building,
-  CreditCard,
   ArrowRight,
   ArrowLeft,
   ChevronDown,
   Calculator,
-  QrCode,
 } from 'lucide-react';
 import { VILLAGE_DATA } from '@/lib/village-data';
 

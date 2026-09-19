@@ -13,7 +13,6 @@ import {
   Clock,
   Cpu,
   RefreshCw,
-  ExternalLink,
   Shield,
   FileCheck2,
 } from 'lucide-react';

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { HelpCircle, Keyboard, Eye, ShieldCheck, ArrowLeft } from 'lucide-react';
+import { HelpCircle, Keyboard, Eye, ArrowLeft } from 'lucide-react';
 
 export default function NapovedaPage() {
   const faqs = [

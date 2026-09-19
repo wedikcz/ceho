@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Clock, Calendar, CheckCircle2, XCircle, ArrowRight } from 'lucide-react';
+import { Clock, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { VILLAGE_DATA } from '@/lib/village-data';
 

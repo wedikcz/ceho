@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Eye, Type, Volume2, Sparkles, ShieldCheck } from 'lucide-react';
+import { Eye, Type, Volume2, ShieldCheck } from 'lucide-react';
 
 export default function AccessibilityBar() {
   const [highContrast, setHighContrast] = useState(false);

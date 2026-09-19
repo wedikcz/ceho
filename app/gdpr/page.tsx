@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { ShieldCheck, Lock, FileText, ArrowLeft, UserCheck, AlertCircle } from 'lucide-react';
+import { ShieldCheck, Lock, FileText, ArrowLeft, UserCheck } from 'lucide-react';
 import { getStoredRopa } from '@/lib/store';
 
 export default function GdprPage() {

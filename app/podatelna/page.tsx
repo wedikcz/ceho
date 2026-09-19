@@ -7,13 +7,9 @@ import {
   Search,
   FileText,
   CheckCircle2,
-  Clock,
-  Shield,
   ArrowLeft,
   Key,
-  Calendar,
   AlertCircle,
-  HelpCircle,
 } from 'lucide-react';
 import { DigitalSubmission, SubmissionType } from '@/lib/types';
 import { getStoredSubmissions, saveSubmission } from '@/lib/store';
@@ -258,20 +254,55 @@ export default function PodatelnaPage() {
             </div>
           </div>
 
-          <div className="p-4 rounded-xl bg-slate-950/80 border border-emerald-500/40 font-mono flex items-center justify-between">
+          <div className="p-4 rounded-xl bg-slate-950/80 border border-emerald-500/40 font-mono flex flex-wrap gap-3 items-center justify-between">
             <div>
               <span className="text-xs text-slate-400 block font-sans">Váš trasovací kód podání:</span>
               <strong className="text-xl text-amber-400">{createdSubmission.trackingCode}</strong>
             </div>
-            <button
-              onClick={() => {
-                setTrackingQuery(createdSubmission.trackingCode);
-                setTrackedItem(createdSubmission);
-              }}
-              className="px-3 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-200 text-xs font-sans font-semibold hover:bg-emerald-500/30 border border-emerald-500/40"
-            >
-              Zobrazit podrobnosti
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  setTrackingQuery(createdSubmission.trackingCode);
+                  setTrackedItem(createdSubmission);
+                }}
+                className="px-3 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-200 text-xs font-sans font-semibold hover:bg-emerald-500/30 border border-emerald-500/40"
+              >
+                Zobrazit podrobnosti
+              </button>
+              <button
+                onClick={async () => {
+                  try {
+                    const response = await fetch('/api/pdf/generate', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify(createdSubmission),
+                    });
+                    const htmlText = await response.text();
+                    const win = window.open('', '_blank');
+                    if (win) {
+                      win.document.write(htmlText);
+                      win.document.close();
+                    } else {
+                      // Fallback download
+                      const blob = new Blob([htmlText], { type: 'text/html;charset=utf-8' });
+                      const url = URL.createObjectURL(blob);
+                      const link = document.createElement('a');
+                      link.href = url;
+                      link.setAttribute('download', `Potvrzeni_podani_${createdSubmission.trackingCode}.html`);
+                      document.body.appendChild(link);
+                      link.click();
+                      document.body.removeChild(link);
+                    }
+                  } catch (e) {
+                    console.error('Error generating PDF:', e);
+                  }
+                }}
+                className="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-sans font-bold shadow-md transition-colors"
+                title="Stáhnout úřední potvrzení podle správního řádu (POD-2027)"
+              >
+                Uložit potvrzení (POD-2027)
+              </button>
+            </div>
           </div>
           <p className="text-xs text-slate-300">
             Kód si uschovejte. O vyřízení vás budeme informovat na e-mail {createdSubmission.applicantEmail}.

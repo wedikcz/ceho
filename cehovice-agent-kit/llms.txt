@@ -1,0 +1,52 @@
+# Portál Čehovice — přehled pro LLM agenty
+
+> Obec Čehovice (okres Prostějov, Olomoucký kraj, 520 obyvatel, IČO 00288101)
+> provozuje digitální portál s AI asistentkou Aničkou a veřejnými API pro agenty.
+
+## Veřejné endpointy (base: https://cehovice.cz/api)
+
+- POST /api/webhook — příjem hlášení závad (kind=report) a návrhů oznámení
+  (kind=notice). Auth: hlavička X-Webhook-Secret. Rate limit 30/min.
+  Odpověď 200 = uloženo, NE publikováno (human-in-the-loop).
+- GET /api/webhook/status — diagnostika webhook vrstvy (auth jako /webhook).
+  Vrací {ok, endpoint, auth, kinds, secretConfigured} — nikdy hodnotu tajemství.
+- POST /api/webhook/alerts — SOAR bezpečnostní alerty (Falco formát).
+  Auth: HMAC-SHA256 podpis raw těla, hlavička X-Signature: sha256=<hex>,
+  klíč env SOAR_WEBHOOK_SECRET. Limit 64 kB. Replay ochrana 10 min → 409.
+  Triage: Critical/High+container → návrh izolace podu; namespace db-zone →
+  NIS2 STIX 2.1 report pro NÚKIB. Žádná autonomní akce — vše schvaluje vedení.
+- POST /api/mcp — MCP server (Streamable HTTP). Auth: Bearer MCP_AUTH_TOKEN.
+  Nástroje: uredni_deska, kalendar_akci, stav_zavad, rozpoctove_projekty,
+  config_obce, health_portalu, znalosti_anicky (vše read-only) + hlasit_zavadu
+  (write — hlášení závady se statusem „nové").
+
+## Klíčové principy
+
+- Human-in-the-loop: žádná publikace bez schválení vedení obce (admin /admin).
+- Fail-closed: bez nastaveného tajemství/tokenu je endpoint zamčený.
+- GDPR: IP jen jako SHA-256 hash, žádná PII v logách, kontakty anonymizovatelné.
+- Audit: každé doručení (i odmítnuté) má stopu (webhookDeliveries, auditLog).
+
+## Formát SOAR alertu (JSON tělo)
+
+{"rule":"<název pravidla>","priority":"Critical|High|Medium|Low|Informational",
+ "source":"<falco|warden|ids…>","output":"<popis incidentu>",
+ "output_fields":{"container.id":"…","k8s.ns.name":"…","user.name":"…","evt.args":"…"}}
+
+Podpis: HMAC_SHA256(SOAR_WEBHOOK_SECRET, presne_telo_json) → hex →
+"X-Signature: sha256=<hex>". Podpisujte presné bytes, které odešlete.
+
+## Formát /api/webhook těla
+
+{"kind":"report","title":"<titulek>","category":"<kategorie>","body":"<popis>"}
+{"kind":"notice","title":"<titulek>","body":"<text oznámení>"}
+
+## Chybové kódy
+
+401 bez/špatný klíč/podpis · 403 špatný HMAC · 409 replay · 413 velké tělo ·
+429 rate limit · 400 nevalidní vstup · 503 fail-closed (tajemství chybí na serveru)
+
+## Kontakty
+
+cehovice@cehovice.cz · +420 582 368 513 · Datová schránka kdmbren ·
+Web www.cehovice.cz

@@ -10,9 +10,7 @@ import {
   CheckCircle2,
   Clock,
   ArrowLeft,
-  Sparkles,
   Shield,
-  EyeOff,
 } from 'lucide-react';
 import { FaultReport, ReportCategory } from '@/lib/types';
 import { getStoredReports, saveReport } from '@/lib/store';

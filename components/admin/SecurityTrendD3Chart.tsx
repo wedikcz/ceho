@@ -3,15 +3,7 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
 import * as d3 from 'd3';
 import {
-  Shield,
-  ShieldAlert,
   TrendingUp,
-  AlertTriangle,
-  CheckCircle2,
-  Lock,
-  Layers,
-  Sparkles,
-  Info,
   Clock,
   Cpu,
 } from 'lucide-react';

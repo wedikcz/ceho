@@ -8,11 +8,8 @@ import {
   Smartphone,
   ShieldCheck,
   CheckCircle2,
-  AlertTriangle,
   ArrowLeft,
   Radio,
-  Lock,
-  ExternalLink,
 } from 'lucide-react';
 import { AlertSubscriber } from '@/lib/types';
 

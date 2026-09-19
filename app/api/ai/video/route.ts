@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
       // Photo-to-video animation
       const cleanBase64 = inputImageBase64.replace(/^data:image\/\w+;base64,/, '');
       operation = await ai.models.generateVideos({
-        model: 'veo-3.1-fast-generate-preview',
+        model: 'veo-3.1-lite-generate-preview',
         prompt: prompt || 'Jemný filmový průlet nad obcí Čehovice v malebné Hané',
         image: {
           imageBytes: cleanBase64,
@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
     } else {
       // Text-to-video
       operation = await ai.models.generateVideos({
-        model: 'veo-3.1-fast-generate-preview',
+        model: 'veo-3.1-lite-generate-preview',
         prompt: `Obec Čehovice: ${prompt}`,
         config: videoConfig,
       });

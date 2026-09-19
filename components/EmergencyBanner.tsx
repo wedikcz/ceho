@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Volume2, Play, Pause, AlertTriangle, ChevronDown, ChevronUp, Radio, BellRing, ExternalLink } from 'lucide-react';
+import { Play, Pause, ChevronDown, ChevronUp, Radio, BellRing } from 'lucide-react';
 import Link from 'next/link';
 import { VILLAGE_DATA } from '@/lib/village-data';
 

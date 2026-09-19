@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Mail, Bell, CheckCircle2, Clock, ChevronDown, ChevronUp, AlertCircle, Check } from 'lucide-react';
+import { Mail, ChevronDown, ChevronUp, Check } from 'lucide-react';
 import { MayorNotification } from '@/lib/types';
 import { markMayorNotificationRead, approveHITLItem } from '@/lib/store';
 

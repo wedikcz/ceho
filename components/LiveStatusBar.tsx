@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { CloudSun, Wind, Droplets, QrCode, Shield, Check, Smartphone, CreditCard, Sparkles, X } from 'lucide-react';
+import { CloudSun, Wind, Droplets, Smartphone, CreditCard, X } from 'lucide-react';
 import { VILLAGE_DATA } from '@/lib/village-data';
 
 export default function LiveStatusBar() {

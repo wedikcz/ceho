@@ -1,11 +1,27 @@
 import type { Metadata } from 'next';
+import dynamic from 'next/dynamic';
+import { Sora, Instrument_Sans } from 'next/font/google';
 import './globals.css';
 import AccessibilityBar from '@/components/AccessibilityBar';
 import EmergencyBanner from '@/components/EmergencyBanner';
 import Navbar from '@/components/Navbar';
 import LiveStatusBar from '@/components/LiveStatusBar';
 import Footer from '@/components/Footer';
-import AnickaChat from '@/components/AnickaChat';
+
+const sora = Sora({
+  subsets: ['latin-ext'],
+  variable: '--font-sora',
+  display: 'swap',
+});
+
+const instrumentSans = Instrument_Sans({
+  subsets: ['latin-ext'],
+  variable: '--font-instrument-sans',
+  display: 'swap',
+});
+
+// Dynamic import for heavy AI Anička Chat widget to optimize initial bundle & FCP
+const AnickaChat = dynamic(() => import('@/components/AnickaChat'));
 
 export const metadata: Metadata = {
   title: 'Obec Čehovice Online 2027 • Oficiální digitální portál',
@@ -58,7 +74,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   };
 
   return (
-    <html lang="cs" className="scroll-smooth" suppressHydrationWarning>
+    <html lang="cs" className={`scroll-smooth ${sora.variable} ${instrumentSans.variable}`} suppressHydrationWarning>
       <head>
         <meta name="theme-color" content="#060d17" />
         <script
@@ -66,7 +82,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
-      <body className="min-h-screen bg-[#060d17] text-slate-100 flex flex-col font-sans antialiased selection:bg-amber-500 selection:text-black">
+      <body className="min-h-screen bg-[#060d17] text-slate-100 flex flex-col font-sans antialiased selection:bg-amber-500 selection:text-black font-body">
         {/* Top Accessibility Settings Bar (High-Contrast & Font Scaling) */}
         <AccessibilityBar />
 

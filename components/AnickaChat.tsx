@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import {
-  MessageSquare,
   X,
   Send,
   Sparkles,
@@ -12,9 +11,12 @@ import {
   ExternalLink,
   ChevronDown,
   Trash2,
-  HelpCircle,
-  AlertCircle,
   FileCheck,
+  Calendar,
+  Volume2,
+  VolumeX,
+  Play,
+  Pause,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -38,6 +40,33 @@ export default function AnickaChat() {
   const [loading, setLoading] = useState(false);
   const [proactiveNotification, setProactiveNotification] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const [activeWidget, setActiveWidget] = useState<'none' | 'calendar' | 'radio'>('none');
+  const [radioSpeaking, setRadioSpeaking] = useState<string | null>(null);
+  const [ttsSpeaking, setTtsSpeaking] = useState<string | null>(null);
+
+  const speakText = (text: string, id: string) => {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      if (ttsSpeaking === id) {
+        window.speechSynthesis.cancel();
+        setTtsSpeaking(null);
+        return;
+      }
+      window.speechSynthesis.cancel();
+      const cleanText = text.replace(/\*\*|\[[^\]]+\]\([^)]+\)/g, ''); // strip markdown
+      const utterance = new SpeechSynthesisUtterance(cleanText);
+      utterance.lang = 'cs-CZ';
+      utterance.rate = 1.0;
+      utterance.onend = () => {
+        setTtsSpeaking(null);
+      };
+      utterance.onerror = () => {
+        setTtsSpeaking(null);
+      };
+      setTtsSpeaking(id);
+      window.speechSynthesis.speak(utterance);
+    }
+  };
 
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
@@ -308,6 +337,129 @@ export default function AnickaChat() {
               </button>
             ))}
           </div>
+
+          {/* Interactive Widgets Control Bar */}
+          <div className="p-2 bg-slate-900 border-b border-slate-800 flex items-center justify-between gap-1.5 px-3">
+            <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wide font-mono">
+              Rychlé nástroje:
+            </span>
+            <div className="flex gap-1">
+              <button
+                type="button"
+                onClick={() => setActiveWidget(activeWidget === 'calendar' ? 'none' : 'calendar')}
+                className={`px-2 py-1 rounded-lg text-[10px] font-bold flex items-center gap-1 transition-all border ${
+                  activeWidget === 'calendar'
+                    ? 'bg-amber-500 text-slate-950 border-amber-400'
+                    : 'bg-slate-950 text-amber-400 border-amber-500/20 hover:border-amber-400/50'
+                }`}
+              >
+                <Calendar className="w-3 h-3" />
+                <span>Svoz odpadu</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveWidget(activeWidget === 'radio' ? 'none' : 'radio')}
+                className={`px-2 py-1 rounded-lg text-[10px] font-bold flex items-center gap-1 transition-all border ${
+                  activeWidget === 'radio'
+                    ? 'bg-sky-500 text-slate-950 border-sky-400'
+                    : 'bg-slate-950 text-sky-300 border-sky-500/20 hover:border-sky-400/50'
+                }`}
+              >
+                <Volume2 className="w-3 h-3" />
+                <span>Obecní rozhlas</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Widget Panel Area */}
+          {activeWidget === 'calendar' && (
+            <div className="p-3 bg-slate-900 border-b border-sky-500/20 text-xs space-y-2.5 animate-fade-in shrink-0">
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-white flex items-center gap-1 text-[11px]">
+                  <Calendar className="w-3.5 h-3.5 text-amber-400" />
+                  Svozový kalendář Čehovice
+                </span>
+                <button
+                  type="button"
+                  onClick={() => speakText("Svozový kalendář Čehovice. Nejbližší termíny svozu jsou: Komunální odpad v neděli dvacátého září. Bioodpad v úterý dvaadvacátého září. Žlutý popel na plasty ve čtvrtek čtyřiadvacátého září. Modrý popel na papír v pondělí osmadvacátého září.", "widget-cal")}
+                  className={`p-1 rounded bg-slate-950 hover:bg-slate-800 border border-slate-800 ${ttsSpeaking === 'widget-cal' ? 'text-rose-400 border-rose-500/30' : 'text-slate-300'}`}
+                  title="Přečíst termíny svozů nahlas"
+                >
+                  {ttsSpeaking === 'widget-cal' ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
+                </button>
+              </div>
+
+              <div className="grid grid-cols-2 gap-1.5 text-[10px]">
+                <div className="p-1.5 rounded-lg bg-slate-950 border-l-4 border-yellow-400 text-slate-300">
+                  <span className="font-bold text-yellow-400 block">Plasty (žlutý)</span>
+                  Čtvrtek 24. 9. 2026
+                  <span className="text-[9px] text-slate-500 block">Za 6 dní</span>
+                </div>
+                <div className="p-1.5 rounded-lg bg-slate-950 border-l-4 border-sky-400 text-slate-300">
+                  <span className="font-bold text-sky-400 block">Papír (modrý)</span>
+                  Pondělí 28. 9. 2026
+                  <span className="text-[9px] text-slate-500 block">Za 10 dní</span>
+                </div>
+                <div className="p-1.5 rounded-lg bg-slate-950 border-l-4 border-amber-700 text-slate-300">
+                  <span className="font-bold text-amber-600 block">Bioodpad (hnědý)</span>
+                  Úterý 22. 9. 2026
+                  <span className="text-[9px] text-slate-500 block">Za 4 dny</span>
+                </div>
+                <div className="p-1.5 rounded-lg bg-slate-950 border-l-4 border-slate-600 text-slate-300">
+                  <span className="font-bold text-slate-300 block">Komunální (černý)</span>
+                  Neděle 20. 9. 2026
+                  <span className="text-[9px] text-amber-400 font-bold block">Za 2 dny</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeWidget === 'radio' && (
+            <div className="p-3 bg-slate-900 border-b border-sky-500/20 text-xs space-y-2 animate-fade-in shrink-0">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="font-bold text-white flex items-center gap-1 text-[11px]">
+                  <Volume2 className="w-3.5 h-3.5 text-sky-400 animate-pulse" />
+                  Místní rozhlas Čehovice
+                </span>
+                <span className="text-[9px] font-mono text-slate-400 bg-slate-950 px-1.5 py-0.5 rounded border border-slate-800">TTS audio syntéza</span>
+              </div>
+
+              <div className="space-y-1.5">
+                {[
+                  {
+                    id: "rad-1",
+                    title: "Očkování psů a koček v obci Čehovice",
+                    text: "Upozorňujeme majitele, že tuto sobotu od devíti do jedenácti hodin dopoledne proběhne u budovy obecního úřadu povinné očkování psů a koček proti vzteklině."
+                  },
+                  {
+                    id: "rad-2",
+                    title: "Plánovaná odstávka pitné vody",
+                    text: "Z důvodu opravy hlavního řadu proběhne v pátek pětadvacátého září od osmi do dvanácti hodin plánovaná odstávka dodávek pitné vody v horní části obce."
+                  }
+                ].map((item) => (
+                  <div key={item.id} className="p-1.5 rounded-lg bg-slate-950 border border-slate-800 flex items-center justify-between gap-2">
+                    <div className="flex-1 space-y-0.5 min-w-0">
+                      <h4 className="font-bold text-white text-[10px] truncate">{item.title}</h4>
+                      <p className="text-[9px] text-slate-400 line-clamp-1">{item.text}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => speakText(item.text, item.id)}
+                      className={`p-1 rounded-lg border transition-all shrink-0 ${
+                        ttsSpeaking === item.id
+                          ? 'bg-rose-500/20 border-rose-500/40 text-rose-300 animate-pulse'
+                          : 'bg-slate-900 hover:bg-slate-800 border-slate-700 text-sky-300'
+                      }`}
+                      title={ttsSpeaking === item.id ? "Zastavit" : "Přehrát rozhlasové hlášení"}
+                    >
+                      {ttsSpeaking === item.id ? <VolumeX className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5 fill-current" />}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Messages Stream Area */}
           <div className="flex-1 p-4 overflow-y-auto space-y-3.5 text-xs sm:text-sm">

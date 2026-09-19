@@ -55,16 +55,27 @@ export async function POST(req: NextRequest) {
       text: `Obec Čehovice vizuál: ${prompt}`,
     });
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-3.1-flash-image-preview',
-      contents: { parts },
-      config: {
-        imageConfig: {
-          aspectRatio: aspectRatio || '16:9',
-          imageSize: '1K',
-        },
-      },
-    });
+    const candidateImageModels = ['gemini-3.1-flash-lite-image', 'gemini-3.1-flash-image'];
+    let response: any = null;
+
+    for (const modelName of candidateImageModels) {
+      try {
+        response = await ai.models.generateContent({
+          model: modelName,
+          contents: { parts },
+          config: {
+            imageConfig: {
+              aspectRatio: aspectRatio || '16:9',
+            },
+          },
+        });
+        if (response?.candidates?.[0]?.content?.parts) {
+          break;
+        }
+      } catch (err: any) {
+        console.warn(`Image generation with ${modelName} failed:`, err?.message || err);
+      }
+    }
 
     let imageUrl: string | null = null;
     let textFeedback: string | null = null;

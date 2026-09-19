@@ -1,0 +1,185 @@
+openapi: 3.1.0
+info:
+  title: Portál Čehovice — Agent API
+  version: "1.0"
+  description: >
+    Veřejné HTTP endpointy portálu obce Čehovice pro externí agenty, boty a
+    automatizační systémy. Všechny zápisy podléhají human-in-the-loop schválení
+    vedením obce. Detaily v dokumentaci balíčku (README.md).
+servers:
+  - url: https://cehovice.cz/api
+    description: Produkční API portálu obce Čehovice
+paths:
+  /webhook:
+    post:
+      operationId: submitWebhook
+      summary: Příjem hlášení závad a návrhů oznámení
+      security:
+        - webhookSecret: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - type: object
+                  required: [kind, title]
+                  properties:
+                    kind:
+                      type: string
+                      const: report
+                    title:
+                      type: string
+                      minLength: 1
+                    category:
+                      type: string
+                    body:
+                      type: string
+                - type: object
+                  required: [kind, title]
+                  properties:
+                    kind:
+                      type: string
+                      const: notice
+                    title:
+                      type: string
+                      minLength: 1
+                    body:
+                      type: string
+      responses:
+        "200":
+          description: Uloženo (notice čeká na schválení vedením; NE publikace)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    const: true
+        "400": { description: Nevalidní vstup (bad_json / bad_kind / missing_title / bad_payload) }
+        "401": { description: Neautorizováno (špatné tajemství) }
+        "429": { description: Rate limit (30/min na hash IP) }
+  /webhook/status:
+    get:
+      operationId: webhookStatus
+      summary: Stav webhook vrstvy
+      security:
+        - webhookSecret: []
+      responses:
+        "200":
+          description: Stav (hodnota tajemství se nikdy nevrací)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+                  endpoint: { type: string }
+                  auth: { type: string }
+                  kinds:
+                    type: array
+                    items: { type: string }
+                  secretConfigured: { type: boolean }
+        "401": { description: Neautorizováno }
+  /webhook/alerts:
+    post:
+      operationId: submitSoarAlert
+      summary: Bezpečnostní alert (SOAR) s HMAC podpisem
+      description: >
+        Autentizace HMAC-SHA256 přes přesné raw tělo; hlavička X-Signature:
+        "sha256=<hex>", klíč env SOAR_WEBHOOK_SECRET. Tělo max 64 kB. Replay
+        ochrana: stejný podpis těla 1× za 10 minut (409). Alert je vždy jen
+        návrh — vedení rozhodne o playbooku v admin panelu.
+      security:
+        - soarHmac: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [rule, priority, source, output]
+              properties:
+                rule:
+                  type: string
+                  description: Název pravidla, které alert spustilo
+                priority:
+                  type: string
+                  enum: [Critical, High, Medium, Low, Informational]
+                source:
+                  type: string
+                  description: Odkud alert přišel (falco, warden, ids…)
+                output:
+                  type: string
+                  description: Lidsky čitelný popis incidentu
+                output_fields:
+                  type: object
+                  description: Strukturovaná pole (container.id, k8s.ns.name, user.name, evt.args)
+                  additionalProperties: true
+      responses:
+        "202":
+          description: Přijato k posouzení vedením
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+                  alertId: { type: string }
+                  proposedPlaybook:
+                    type: string
+                    enum: [izolace_podu, nis2_hlaseni, jen_zaznam]
+                  note: { type: string }
+        "400": { description: Nevalidní vstup / neznámá priorita }
+        "401": { description: Chybí hlavička X-Signature }
+        "403": { description: Neplatný podpis }
+        "409": { description: Replay (stejný alert v posledních 10 min) }
+        "413": { description: Tělo větší než 64 kB }
+        "503": { description: Fail-closed (SOAR_WEBHOOK_SECRET není nastaven) }
+  /mcp:
+    post:
+      operationId: mcpEndpoint
+      summary: MCP server (Model Context Protocol, Streamable HTTP)
+      description: >
+        JSON-RPC 2.0. Metody: initialize, tools/list, tools/call. Nástroje:
+        uredni_deska, kalendar_akci, stav_zavad, rozpoctove_projekty,
+        config_obce, health_portalu, znalosti_anicky (read-only),
+        hlasit_zavadu (write — hlášení závady). Auth: Bearer MCP_AUTH_TOKEN.
+      security:
+        - mcpBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [jsonrpc, id, method]
+              properties:
+                jsonrpc:
+                  type: string
+                  const: "2.0"
+                id: { type: integer }
+                method:
+                  type: string
+                  enum: [initialize, tools/list, tools/call]
+                params:
+                  type: object
+      responses:
+        "200": { description: JSON-RPC odpověď }
+        "401": { description: unauthorized (chybí/špatný bearer token) }
+components:
+  securitySchemes:
+    webhookSecret:
+      type: apiKey
+      in: header
+      name: X-Webhook-Secret
+    soarHmac:
+      type: apiKey
+      in: header
+      name: X-Signature
+      description: "sha256=<HMAC-SHA256(raw_body, SOAR_WEBHOOK_SECRET) jako hex>"
+    mcpBearer:
+      type: http
+      scheme: bearer
+      description: "Hodnota env MCP_AUTH_TOKEN serveru"

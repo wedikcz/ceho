@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "cehovice-portal": {
+      "type": "http",
+      "url": "https://cehovice.cz/api/mcp",
+      "headers": {
+        "Authorization": "Bearer cehovice-mcp-bearer-token-2026"
+      }
+    }
+  }
+}

@@ -2,30 +2,34 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import {
   FileText,
   AlertTriangle,
   Send,
-  Calendar,
   Trash2,
   Users,
   Building2,
   Clock,
   ArrowRight,
-  ShieldCheck,
   CheckCircle2,
   Sparkles,
   Download,
   ThumbsUp,
   MapPin,
-  ExternalLink,
-  ChevronRight,
-  Phone,
-  Radio,
 } from 'lucide-react';
-import TownClock from '@/components/TownClock';
 import ExpandableSection from '@/components/ExpandableSection';
 import { VILLAGE_DATA } from '@/lib/village-data';
+
+// Dynamic import for TownClock to eliminate hydration diffs & speed up initial page rendering
+const TownClock = dynamic(() => import('@/components/TownClock'), {
+  ssr: false,
+  loading: () => (
+    <div className="h-44 w-full rounded-2xl bg-slate-900/40 border border-slate-800 animate-pulse flex items-center justify-center text-xs text-slate-500 font-mono">
+      Načítám orloj obce...
+    </div>
+  ),
+});
 
 export default function HomePage() {
   // Participatory budgeting votes state
@@ -303,6 +307,42 @@ END:VCALENDAR`;
               <p className="text-white">První písemná zmínka: rok 1299</p>
               <p className="text-slate-300">Kostel sv. Prokopa (baroko 1787)</p>
               <p className="text-slate-400">Pískovcová socha sv. Jana Nepomuckého (1742)</p>
+            </div>
+          </div>
+        </ExpandableSection>
+
+        {/* Card 4: Rozpočet a hospodaření obce */}
+        <ExpandableSection
+          id="card-obec-rozpocet"
+          icon={Building2}
+          title="Rozpočet a hospodaření obce"
+          subtitle="Příjmy, výdaje, rozpočtový plán a přebytek hospodaření"
+          badge={{ text: 'Přebytkový', variant: 'amber' }}
+          kpiSummary={<span className="text-emerald-400 font-mono text-xs">Přebytek: +1.43 mil. Kč</span>}
+        >
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2 text-xs">
+            <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800 space-y-1">
+              <span className="text-slate-400 block font-semibold uppercase tracking-wider text-[11px]">
+                Plánované Příjmy 2026
+              </span>
+              <p className="text-lg font-bold text-emerald-400">14 850 000 Kč</p>
+              <p className="text-[10px] text-slate-400">Daňové příjmy, poplatky a dotace Olomouckého kraje</p>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800 space-y-1">
+              <span className="text-slate-400 block font-semibold uppercase tracking-wider text-[11px]">
+                Schválené Výdaje 2026
+              </span>
+              <p className="text-lg font-bold text-rose-400">13 420 000 Kč</p>
+              <p className="text-[10px] text-slate-400">Investiční akce, údržba, provoz úřadu a hasičské zbrojnice</p>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800 space-y-1">
+              <span className="text-slate-400 block font-semibold uppercase tracking-wider text-[11px]">
+                Kapitálové Investice
+              </span>
+              <p className="text-lg font-bold text-sky-400">3 950 000 Kč</p>
+              <p className="text-[10px] text-slate-400">Chodníky silnice III/36711, rybník a FVE panely</p>
             </div>
           </div>
         </ExpandableSection>

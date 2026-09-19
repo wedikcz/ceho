@@ -15,12 +15,6 @@ import {
   Clock,
   RefreshCw,
   Terminal,
-  FileCheck,
-  AlertTriangle,
-  Volume2,
-  Paperclip,
-  Check,
-  X,
   ExternalLink,
 } from 'lucide-react';
 import {
@@ -166,7 +160,7 @@ export default function CdpStarostaCard({ onDataChanged }: CdpStarostaCardProps)
 
     try {
       if (activeTool === 'image') {
-        // Image generation mode with gemini-3.1-flash-image-preview
+        // Image generation mode with gemini-3.1-flash-lite-image
         const res = await fetch('/api/ai/image', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -180,14 +174,14 @@ export default function CdpStarostaCard({ onDataChanged }: CdpStarostaCardProps)
             role: 'assistant',
             content: `🎨 **Vizuální koncept pro obec Čehovice vygenerován:**\n"${query}"`,
             timestamp: new Date().toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' }),
-            source: 'gemini-3.1-flash-image-preview',
+            source: 'gemini-3.1-flash-lite-image',
             mediaUrl: data.imageUrl,
             mediaType: 'image',
           },
         ]);
         setActiveTool('chat');
       } else if (activeTool === 'search') {
-        // Search grounding mode with gemini-3.5-flash
+        // Search grounding mode with gemini-3.8-flash
         const res = await fetch('/api/ai/search', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -201,13 +195,13 @@ export default function CdpStarostaCard({ onDataChanged }: CdpStarostaCardProps)
             role: 'assistant',
             content: data.answer || 'Rešerše byla dokončena.',
             timestamp: new Date().toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' }),
-            source: 'gemini-3.5-flash + Google Search Grounding',
+            source: 'gemini-3.8-flash + Google Search Grounding',
             sources: data.sources,
           },
         ]);
         setActiveTool('chat');
       } else if (activeTool === 'video') {
-        // Video mode with veo-3.1-fast-generate-preview
+        // Video mode with veo-3.1-lite-generate-preview
         const res = await fetch('/api/ai/video', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -221,7 +215,7 @@ export default function CdpStarostaCard({ onDataChanged }: CdpStarostaCardProps)
             role: 'assistant',
             content: `🎬 **Video generátor Veo 3:**\n${data.message || 'Video bylo zadáno do fronty.'}`,
             timestamp: new Date().toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' }),
-            source: 'veo-3.1-fast-generate-preview',
+            source: 'veo-3.1-lite-generate-preview',
             mediaUrl: data.videoUrl,
             mediaType: 'video',
           },

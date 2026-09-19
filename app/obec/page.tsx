@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Landmark, Calendar, MapPin, Award, TreePine, Church, ArrowLeft } from 'lucide-react';
+import { Landmark, TreePine, Church, ArrowLeft } from 'lucide-react';
 import { VILLAGE_DATA } from '@/lib/village-data';
 
 export default function ObecPage() {

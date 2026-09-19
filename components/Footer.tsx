@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Shield, Lock, FileText, CheckCircle2, Building, Heart, ExternalLink, HelpCircle } from 'lucide-react';
+import { HelpCircle } from 'lucide-react';
 import { VILLAGE_DATA } from '@/lib/village-data';
 
 export default function Footer() {

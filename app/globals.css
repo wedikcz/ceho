@@ -20,6 +20,13 @@
     color: #e2e8f0;
   }
 
+  .font-heading {
+    font-family: var(--font-sora), system-ui, sans-serif;
+  }
+  .font-body {
+    font-family: var(--font-instrument-sans), system-ui, sans-serif;
+  }
+
   /* Accessibility: Large Text mode */
   html.font-lg {
     font-size: 112.5%;

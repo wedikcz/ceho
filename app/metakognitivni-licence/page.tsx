@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Award, ShieldAlert, CheckCircle2, ArrowLeft, Cpu } from 'lucide-react';
+import { Award, ArrowLeft, Cpu } from 'lucide-react';
 
 export default function MetakognitivniLicencePage() {
   return (
