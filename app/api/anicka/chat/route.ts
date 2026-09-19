@@ -42,8 +42,8 @@ export async function POST(req: NextRequest) {
         parts: [{ text: `Kontext dotazu: Uživatel je na stránce "${currentPage || '/'}". Otázka občana: ${message}` }],
       });
 
-      // Try primary model (gemini-3.8-flash) and fallback model (gemini-3.1-flash-lite)
-      const candidateModels = ['gemini-3.8-flash', 'gemini-3.1-flash-lite'];
+      // Try primary model (gemini-3.8-flash) and fallback models (gemini-flash-latest, gemini-3.1-flash-lite)
+      const candidateModels = ['gemini-3.8-flash', 'gemini-flash-latest', 'gemini-3.1-flash-lite'];
       for (const model of candidateModels) {
         try {
           const response = await ai.models.generateContent({

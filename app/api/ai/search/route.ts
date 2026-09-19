@@ -26,9 +26,10 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    const candidateSearchModels = ['gemini-3.8-flash'];
+    const candidateSearchModels = ['gemini-3.8-flash', 'gemini-flash-latest', 'gemini-3.1-flash-lite'];
     let response: any = null;
-
+    let activeModel = 'gemini-3.8-flash';
+ 
     for (const modelName of candidateSearchModels) {
       try {
         response = await ai.models.generateContent({
@@ -38,12 +39,15 @@ export async function POST(req: NextRequest) {
             tools: [{ googleSearch: {} }],
           },
         });
-        if (response?.text) break;
+        if (response?.text) {
+          activeModel = modelName;
+          break;
+        }
       } catch (err: any) {
         console.warn(`Search grounding with ${modelName} failed:`, err?.message || err);
       }
     }
-
+ 
     const answer = response.text || 'Nebyly nalezeny žádné podrobnosti.';
     const searchChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
     const sources = searchChunks
@@ -52,10 +56,11 @@ export async function POST(req: NextRequest) {
         url: chunk.web?.uri || '#',
       }))
       .filter((s: any) => s.url !== '#');
-
+ 
     return NextResponse.json({
       answer,
       sources,
+      model: activeModel,
     });
   } catch (error: any) {
     console.error('Error in search grounding:', error);
